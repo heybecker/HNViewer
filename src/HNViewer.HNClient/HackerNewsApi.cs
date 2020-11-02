@@ -1,7 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Caching.Distributed;
 
 namespace HNViewer.HNClient
 {
@@ -15,15 +17,24 @@ namespace HNViewer.HNClient
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
         };
 
+        private readonly DistributedCacheEntryOptions _responseCacheOptions = new DistributedCacheEntryOptions()
+        {
+            //TODO: this could be a config setting
+            AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(1)
+        };
+
         private readonly HttpClient _httpClient;
+
+        private readonly IDistributedCache _responseCache;
 
         /// <summary>
         /// Default constructor.
         /// </summary>
         /// <param name="httpClient">Use HackerNewApiHttpClient for correct configuration</param>
-        public HackerNewsApi(HttpClient httpClient)
+        public HackerNewsApi(HttpClient httpClient, IDistributedCache responseCache)
         {
             _httpClient = httpClient;
+            _responseCache = responseCache;
         }
 
         /// <summary>
@@ -31,7 +42,7 @@ namespace HNViewer.HNClient
         /// </summary>
         public Task<IEnumerable<int>> GetNewStoriesAsync()
         {
-            return HttpGetAsync<IEnumerable<int>>("newstories.json");
+            return HttpGetAsync<IEnumerable<int>>("/newstories.json");
         }
 
         /// <summary>
@@ -39,14 +50,21 @@ namespace HNViewer.HNClient
         /// </summary>
         public Task<HackerNewsItem> GetItemAsync(int id)
         {
-            return HttpGetAsync<HackerNewsItem>($"item/{id}.json");
+            return HttpGetAsync<HackerNewsItem>($"/item/{id}.json");
         }
 
         private async Task<TResult> HttpGetAsync<TResult>(string url)
         {
-            return await _httpClient
-                .GetStringAsync(url)
-                .ContinueWith(t => JsonSerializer.Deserialize<TResult>(t.Result, _jsonSerializerOptions));
+            var json = await _responseCache.GetStringAsync(url);
+
+            if (string.IsNullOrEmpty(json))
+            {
+                json = await _httpClient.GetStringAsync(url);
+
+                await _responseCache.SetStringAsync(url, json, _responseCacheOptions);
+            }
+
+            return JsonSerializer.Deserialize<TResult>(json, _jsonSerializerOptions);
         }
     }
 }

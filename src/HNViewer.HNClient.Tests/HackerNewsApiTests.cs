@@ -1,7 +1,10 @@
 ﻿using System;
-using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.Extensions.Caching.Distributed;
 using NSubstitute;
 using NSubstitute.ReceivedExtensions;
 using NUnit.Framework;
@@ -12,6 +15,7 @@ namespace HNViewer.HNClient.Tests
     public class HackerNewsApiTests
     {
         FakeHttpMessageHandler _mockHttpMessageHandler;
+        IDistributedCache _mockResponseCache;
         IHackerNewsApi _api;
 
         [SetUp]
@@ -22,7 +26,9 @@ namespace HNViewer.HNClient.Tests
             var httpClient = new HttpClient(_mockHttpMessageHandler);
             httpClient.BaseAddress = new Uri("http://fakeaddress.com");
 
-            _api = new HackerNewsApi(httpClient);
+            _mockResponseCache = Substitute.For<IDistributedCache>();
+
+            _api = new HackerNewsApi(httpClient, _mockResponseCache);
         }
 
         [Test]
@@ -66,6 +72,38 @@ namespace HNViewer.HNClient.Tests
 
             _mockHttpMessageHandler.Received().Send(
                 Arg.Is<HttpRequestMessage>(req => req.RequestUri.AbsolutePath.Contains("/item/123.json")));
+        }
+
+        [Test]
+        public void GetItemAsync_ItemNotInCache_SetsCache()
+        {
+            const string itemKey = "/item/123.json";
+
+            SetupMockResponse(HttpStatusCode.OK, "{ \"id\": 123 }");
+
+            var result = _api.GetItemAsync(123).Result;
+
+            _mockResponseCache.Received().SetAsync(
+                itemKey, 
+                Arg.Any<byte[]>(), 
+                Arg.Any<DistributedCacheEntryOptions>(), 
+                Arg.Any<CancellationToken>());
+        }
+
+        [Test]
+        public void GetItemAsync_ItemInCache_GetsFromCache()
+        {
+            const string itemKey = "/item/123.json";
+            
+            _mockResponseCache
+                .GetAsync(itemKey, Arg.Any<CancellationToken>())
+                .Returns(Task.FromResult(Encoding.ASCII.GetBytes("{ \"id\": 123 }")));
+
+            var result = _api.GetItemAsync(123).Result;
+
+            Assert.IsNotNull(result);
+            _mockResponseCache.Received().GetAsync(itemKey, Arg.Any<CancellationToken>());
+            _mockHttpMessageHandler.DidNotReceive().Send(Arg.Any<HttpRequestMessage>());
         }
 
         [Test]
