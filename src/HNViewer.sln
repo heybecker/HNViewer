@@ -3,9 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.30621.155
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HNViewer.HNClient", "HNViewer.HNClient\HNViewer.HNClient.csproj", "{24AE5C73-916F-4F61-A972-D34ACF009672}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HNViewer.HNClient", "HNViewer.HNClient\HNViewer.HNClient.csproj", "{24AE5C73-916F-4F61-A972-D34ACF009672}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HNViewer.HNClient.Tests", "HNViewer.HNClient.Tests\HNViewer.HNClient.Tests.csproj", "{BA042AF8-2947-4C32-B511-40ADAB4C5814}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HNViewer.HNClient.Tests", "HNViewer.HNClient.Tests\HNViewer.HNClient.Tests.csproj", "{BA042AF8-2947-4C32-B511-40ADAB4C5814}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HNViewer.Web.API", "HNViewer.Web.API\HNViewer.Web.API.csproj", "{5A1D9919-3C91-4BC3-A5BA-D6E8E57DCA3D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,10 @@ Global
 		{BA042AF8-2947-4C32-B511-40ADAB4C5814}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BA042AF8-2947-4C32-B511-40ADAB4C5814}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BA042AF8-2947-4C32-B511-40ADAB4C5814}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5A1D9919-3C91-4BC3-A5BA-D6E8E57DCA3D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5A1D9919-3C91-4BC3-A5BA-D6E8E57DCA3D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5A1D9919-3C91-4BC3-A5BA-D6E8E57DCA3D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5A1D9919-3C91-4BC3-A5BA-D6E8E57DCA3D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
