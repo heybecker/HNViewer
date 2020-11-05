@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Options;
 using NSubstitute;
 using NSubstitute.ReceivedExtensions;
 using NUnit.Framework;
@@ -21,14 +22,20 @@ namespace HNViewer.HNClient.Tests
         [SetUp]
         public void SetUp()
         {
+            var options = Options.Create(
+                new HackerNewsClientOptions()
+                {
+                    ApiBaseAddress = "http://fakeaddress.com",
+                    CacheExpirationMinutes = 1
+                });
+
             _mockHttpMessageHandler = Substitute.ForPartsOf<FakeHttpMessageHandler>();
 
-            var httpClient = new HttpClient(_mockHttpMessageHandler);
-            httpClient.BaseAddress = new Uri("http://fakeaddress.com");
+            var httpClient = new HackerNewsApiHttpClient(_mockHttpMessageHandler, options);
 
             _mockResponseCache = Substitute.For<IDistributedCache>();
 
-            _api = new HackerNewsApi(httpClient, _mockResponseCache);
+            _api = new HackerNewsApi(httpClient, _mockResponseCache, options);
         }
 
         [Test]
@@ -106,7 +113,7 @@ namespace HNViewer.HNClient.Tests
         [Test]
         public void GetItemAsync_ItemNotInCache_SetsCache()
         {
-            const string itemKey = "/item/123.json";
+            const string itemKey = "item/123.json";
 
             SetupMockResponse(HttpStatusCode.OK, "{ \"id\": 123 }");
 
@@ -122,7 +129,7 @@ namespace HNViewer.HNClient.Tests
         [Test]
         public void GetItemAsync_ItemInCache_GetsFromCache()
         {
-            const string itemKey = "/item/123.json";
+            const string itemKey = "item/123.json";
             
             _mockResponseCache
                 .GetAsync(itemKey, Arg.Any<CancellationToken>())

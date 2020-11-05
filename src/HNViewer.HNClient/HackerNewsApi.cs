@@ -4,6 +4,7 @@ using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Options;
 
 namespace HNViewer.HNClient
 {
@@ -17,11 +18,7 @@ namespace HNViewer.HNClient
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
         };
 
-        private readonly DistributedCacheEntryOptions _responseCacheOptions = new DistributedCacheEntryOptions()
-        {
-            //TODO: this could be a config setting
-            AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(1)
-        };
+        private readonly DistributedCacheEntryOptions _responseCacheOptions = new DistributedCacheEntryOptions();
 
         private readonly HttpClient _httpClient;
 
@@ -31,10 +28,14 @@ namespace HNViewer.HNClient
         /// Default constructor.
         /// </summary>
         /// <param name="httpClient">Use HackerNewApiHttpClient for correct configuration</param>
-        public HackerNewsApi(HttpClient httpClient, IDistributedCache responseCache)
+        public HackerNewsApi(
+            HackerNewsApiHttpClient httpClient, 
+            IDistributedCache responseCache, 
+            IOptions<HackerNewsClientOptions> options)
         {
             _httpClient = httpClient;
             _responseCache = responseCache;
+            _responseCacheOptions.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(options.Value.CacheExpirationMinutes);
         }
 
         /// <summary>
@@ -42,7 +43,7 @@ namespace HNViewer.HNClient
         /// </summary>
         public Task<IEnumerable<int>> GetNewStoriesAsync()
         {
-            return HttpGetAsync<IEnumerable<int>>("/newstories.json");
+            return HttpGetAsync<IEnumerable<int>>("newstories.json");
         }
 
         /// <summary>
@@ -50,7 +51,7 @@ namespace HNViewer.HNClient
         /// </summary>
         public Task<HackerNewsItem> GetItemAsync(int id)
         {
-            return HttpGetAsync<HackerNewsItem>($"/item/{id}.json");
+            return HttpGetAsync<HackerNewsItem>($"item/{id}.json");
         }
 
         private async Task<TResult> HttpGetAsync<TResult>(string url)
