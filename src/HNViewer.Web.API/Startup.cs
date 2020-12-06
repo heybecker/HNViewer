@@ -1,6 +1,7 @@
 using HNViewer.HNClient;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -23,7 +24,7 @@ namespace HNViewer.Web.API
             services.AddDistributedMemoryCache();
 
             services.AddHackerNewsClient(Configuration);
-            
+
             services.AddControllers();
         }
 
@@ -40,6 +41,11 @@ namespace HNViewer.Web.API
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
+
+                endpoints.MapGet("/", async context =>
+                {
+                    await context.Response.WriteAsync("Hello World, I'm HNViewer API!");
+                });
             });
         }
     }
